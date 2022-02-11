@@ -1,5 +1,4 @@
 import random
-from turtle import pos
 from typing import List, Dict
 
 """
