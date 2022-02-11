@@ -22,58 +22,58 @@ def avoid_my_neck(my_head: Dict[str, int], my_body: List[dict], possible_moves: 
     """
     my_neck = my_body[1]  # The segment of body right after the head is the 'neck'
 
-    if my_neck["x"] < my_head["x"]:  # my neck is left of my head
+    if my_neck["x"] < my_head["x"] and "left" in possible_moves:  # my neck is left of my head
         possible_moves.remove("left")
-    elif my_neck["x"] > my_head["x"]:  # my neck is right of my head
+    elif my_neck["x"] > my_head["x"] and "right" in possible_moves:  # my neck is right of my head
         possible_moves.remove("right")
-    elif my_neck["y"] < my_head["y"]:  # my neck is below my head
+    elif my_neck["y"] < my_head["y"] and "down" in possible_moves:  # my neck is below my head
         possible_moves.remove("down")
-    elif my_neck["y"] > my_head["y"]:  # my neck is above my head
+    elif my_neck["y"] > my_head["y"] and "up" in possible_moves:  # my neck is above my head
         possible_moves.remove("up")
 
     return possible_moves
 
 def avoid_board_edge(board_height: int, board_width: int, my_head: Dict[str, int], possible_moves: List[str]) -> List[str]:
-    if my_head["x"] == board_width - 1:
+    if my_head["x"] == board_width - 1  and "right" in possible_moves:
         possible_moves.remove("right")
     
-    if my_head["x"] == 0:
+    if my_head["x"] == 0  and "left" in possible_moves:
         possible_moves.remove("left")
     
-    if my_head["y"] == board_height - 1:
+    if my_head["y"] == board_height - 1  and "up" in possible_moves:
         possible_moves.remove("up")
     
-    if my_head["y"] == 0:
+    if my_head["y"] == 0  and "down" in possible_moves:
         possible_moves.remove("down")
 
     return possible_moves
 
 def avoid_my_body(my_head: Dict[str, int], my_body: List[Dict[str, int]], possible_moves: List[str]) -> List[str]:
-    if { "x": my_head["x"] + 1, "y": my_head["y"] } in my_body:
+    if { "x": my_head["x"] + 1, "y": my_head["y"] } in my_body and "right" in possible_moves:
         possible_moves.remove("right")
 
-    if { "x": my_head["x"] - 1, "y": my_head["y"] } in my_body:
+    if { "x": my_head["x"] - 1, "y": my_head["y"] } in my_body and "left" in possible_moves:
         possible_moves.remove("left")
 
-    if { "x": my_head["x"], "y": my_head["y"] + 1 } in my_body:
+    if { "x": my_head["x"], "y": my_head["y"] + 1 } in my_body and "up" in possible_moves:
         possible_moves.remove("up")
 
-    if { "x": my_head["x"], "y": my_head["y"] - 1 } in my_body:
+    if { "x": my_head["x"], "y": my_head["y"] - 1 } in my_body and "down" in possible_moves:
         possible_moves.remove("down")
 
     return possible_moves
 
 def avoid_bad_objects(my_head: Dict[str, int], hazards: List[Dict[str, int]], possible_moves: List[str]) -> List[str]:
-    if { "x": my_head["x"] + 1, "y": my_head["y"] } in hazards:
+    if { "x": my_head["x"] + 1, "y": my_head["y"] } in hazards and "right" in possible_moves:
         possible_moves.remove("right")
 
-    if { "x": my_head["x"] - 1, "y": my_head["y"] } in hazards:
+    if { "x": my_head["x"] - 1, "y": my_head["y"] } in hazards and "left" in possible_moves:
         possible_moves.remove("left")
 
-    if { "x": my_head["x"], "y": my_head["y"] + 1 } in hazards:
+    if { "x": my_head["x"], "y": my_head["y"] + 1 } in hazards and "up" in possible_moves:
         possible_moves.remove("up")
 
-    if { "x": my_head["x"], "y": my_head["y"] - 1 } in hazards:
+    if { "x": my_head["x"], "y": my_head["y"] - 1 } in hazards and "down" in possible_moves:
         possible_moves.remove("down")
 
     return possible_moves
@@ -143,7 +143,7 @@ def choose_move(data: dict) -> str:
     possible_moves = avoid_bad_objects(my_head, hazards, possible_moves)
 
     # Move towards food if present
-    possible_moves = move_if_food(my_body, data["board"]["food"], possible_moves)
+    possible_moves = move_if_food(my_head, data["board"]["food"], possible_moves)
 
     # Choose a random direction from the remaining possible_moves to move in, and then return that move
     move = random.choice(possible_moves)
