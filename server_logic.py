@@ -1,4 +1,5 @@
 import random
+from turtle import pos
 from typing import List, Dict
 
 """
@@ -33,6 +34,70 @@ def avoid_my_neck(my_head: Dict[str, int], my_body: List[dict], possible_moves: 
 
     return possible_moves
 
+def avoid_board_edge(board_height: int, board_width: int, my_head: Dict[str, int], possible_moves: List[str]) -> List[str]:
+    if my_head["x"] == board_width - 1:
+        possible_moves.remove("right")
+    
+    if my_head["x"] == 0:
+        possible_moves.remove("left")
+    
+    if my_head["y"] == board_height - 1:
+        possible_moves.remove("up")
+    
+    if my_head["y"] == 0:
+        possible_moves.remove("down")
+
+    return possible_moves
+
+def avoid_my_body(my_head: Dict[str, int], my_body: List[Dict[str, int]], possible_moves: List[str]) -> List[str]:
+    if { "x": my_head["x"] + 1, "y": my_head["y"] } in my_body:
+        possible_moves.remove("right")
+
+    if { "x": my_head["x"] - 1, "y": my_head["y"] } in my_body:
+        possible_moves.remove("left")
+
+    if { "x": my_head["x"], "y": my_head["y"] + 1 } in my_body:
+        possible_moves.remove("up")
+
+    if { "x": my_head["x"], "y": my_head["y"] - 1 } in my_body:
+        possible_moves.remove("down")
+
+    return possible_moves
+
+def avoid_bad_objects(my_head: Dict[str, int], hazards: List[Dict[str, int]], possible_moves: List[str]) -> List[str]:
+    if { "x": my_head["x"] + 1, "y": my_head["y"] } in hazards:
+        possible_moves.remove("right")
+
+    if { "x": my_head["x"] - 1, "y": my_head["y"] } in hazards:
+        possible_moves.remove("left")
+
+    if { "x": my_head["x"], "y": my_head["y"] + 1 } in hazards:
+        possible_moves.remove("up")
+
+    if { "x": my_head["x"], "y": my_head["y"] - 1 } in hazards:
+        possible_moves.remove("down")
+
+    return possible_moves
+
+def move_if_food(my_head: Dict[str, int], food: List[Dict[str, int]], possible_moves: List[str]) -> List[str]:
+    food_moves: List[str] = []
+
+    if { "x": my_head["x"] + 1, "y": my_head["y"] } in food:
+        food_moves.append("right")
+
+    if { "x": my_head["x"] - 1, "y": my_head["y"] } in food:
+        food_moves.append("left")
+
+    if { "x": my_head["x"], "y": my_head["y"] + 1 } in food:
+        food_moves.append("up")
+
+    if { "x": my_head["x"], "y": my_head["y"] - 1 } in food:
+        food_moves.append("down")
+    
+    if len(food_moves) > 0:
+        return food_moves
+    else:
+        return possible_moves
 
 def choose_move(data: dict) -> str:
     """
@@ -50,25 +115,36 @@ def choose_move(data: dict) -> str:
     my_body = data["you"]["body"]  # A list of x/y coordinate dictionaries like [ {"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 2, "y": 0} ]
 
     # TODO: uncomment the lines below so you can see what this data looks like in your output!
-    # print(f"~~~ Turn: {data['turn']}  Game Mode: {data['game']['ruleset']['name']} ~~~")
-    # print(f"All board data this turn: {data}")
-    # print(f"My Battlesnakes head this turn is: {my_head}")
-    # print(f"My Battlesnakes body this turn is: {my_body}")
+    print(f"~~~ Turn: {data['turn']}  Game Mode: {data['game']['ruleset']['name']} ~~~")
+    print(f"All board data this turn: {data}")
+    print(f"My Battlesnakes head this turn is: {my_head}")
+    print(f"My Battlesnakes body this turn is: {my_body}")
 
     possible_moves = ["up", "down", "left", "right"]
 
     # Don't allow your Battlesnake to move back in on it's own neck
     possible_moves = avoid_my_neck(my_head, my_body, possible_moves)
 
-    # TODO: Using information from 'data', find the edges of the board and don't let your Battlesnake move beyond them
-    # board_height = ?
-    # board_width = ?
+    # Don't let our snake move off the board
+    board_height = data["board"]["height"]
+    board_width = data["board"]["width"]
 
-    # TODO Using information from 'data', don't let your Battlesnake pick a move that would hit its own body
+    possible_moves = avoid_board_edge(board_height, board_width, my_head, possible_moves)
 
-    # TODO: Using information from 'data', don't let your Battlesnake pick a move that would collide with another Battlesnake
+    # Don't let our snake hit it's own body
+    possible_moves = avoid_my_body(my_head, my_body, possible_moves)
 
-    # TODO: Using information from 'data', make your Battlesnake move towards a piece of food on the board
+    # Don't let our snake hit other objects
+    hazards: List[Dict[str, int]] = data["board"]["hazards"]
+
+    for snake in data["board"]["snakes"]:
+        hazards.append(snake["head"])
+        hazards.extend(snake["body"])
+
+    possible_moves = avoid_bad_objects(my_head, hazards, possible_moves)
+
+    # Move towards food if present
+    possible_moves = move_if_food(my_body, data["board"]["food"], possible_moves)
 
     # Choose a random direction from the remaining possible_moves to move in, and then return that move
     move = random.choice(possible_moves)
